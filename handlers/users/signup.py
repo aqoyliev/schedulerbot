@@ -39,11 +39,12 @@ async def full_name_handler(msg: Message, state: FSMContext):
     full_name = msg.text.replace("'","''")
     try:
         await state.update_data(full_name=full_name)
-        phone_number = (await db.select_user(chat_id=msg.from_user.id))[0][4]
+        phone_number = await db.select_user_attribute(msg.from_user.id, 'phone')
         if not phone_number:
             await msg.answer(trans.translate("Telefon raqamingizni jo'nating!\nNamuna: +998901234567",dest=lang).text, reply_markup=await back_markup(lang))
             await Register.phone_number.set()
         else:
+            await db.update_user_full_name(msg.from_user.id, msg.text)
             await msg.answer(trans.translate("Ism familiyangiz ma'lumotlar bazasiga muvaffaqiyatli saqlandi ✅",dest=lang).text)
             await msg.answer(trans.translate("Asosiy menyu",dest=lang).text, reply_markup=await main_menu(lang))
             await state.finish()
@@ -59,20 +60,21 @@ async def phone_number_handler(msg: Message, state: FSMContext):
         await msg.answer(trans.translate(text=text, dest=lang).text,reply_markup=ReplyKeyboardRemove(True))
         await Register.full_name.set()
     elif re.match(pattern, msg.text):
-        # try:
+        try:
             await state.update_data(phone=msg.text)
-            user_faculty_id = (await db.select_user(chat_id=msg.from_user.id))[0][4]
+            user_faculty_id = await db.select_user_attribute(msg.from_user.id, 'faculty_id')
             if not user_faculty_id:
                 universities = (await db.select_all_universities())
                 await msg.answer(trans.translate("Universitetingizni tanlang",dest=lang).text, reply_markup=await register_markup(lang, universities, row=1))
                 await Register.university.set()
             else:
+                await db.update_user_phone(msg.from_user.id, msg.text)
                 await msg.answer(trans.translate("Telefon raqamingiz ma'lumotlar bazasiga muvaffaqiyatli saqlandi ✅",dest=lang).text)
                 await msg.answer(trans.translate("Asosiy menyu",dest=lang).text, reply_markup=await main_menu(lang))
                 await state.finish()
-        # except:
-        #     await msg.answer(trans.translate("Telefon raqamingizni bazaga saqlashda muammo yuzaga keldi😔\n"
-        #                                     "Iltimos qayta urinib ko'ring!",dest=lang).text)
+        except:
+            await msg.answer(trans.translate("Telefon raqamingizni bazaga saqlashda muammo yuzaga keldi😔\n"
+                                            "Iltimos qayta urinib ko'ring!",dest=lang).text)
     else:
         await msg.answer(trans.translate("Noto'g'ri telefon raqam jo'natdingiz, iltimos to'g'rilab qayta jo'nating",dest=lang).text)
    
@@ -185,15 +187,15 @@ async def set_education(msg: Message, state: FSMContext):
         await msg.answer(trans.translate("Kursingizni tanlang",dest=lang).text, reply_markup=await register_markup(lang, courses, row=2))
         await Register.course.set()
     else:
-        # try:
+        try:
             education_id = (await db.select_education(name=msg.text, faculty_id=faculty_id))[0][0]
             await state.update_data(education_id=education_id)
             groups = await db.select_groups_signup(faculty_id=faculty_id, course_id=course_id, direction_id=direction_id, education_id=education_id)
             await msg.answer(trans.translate("Guruhingizni tanlang",dest=lang).text, reply_markup=await register_markup(lang, groups, row=2))
             await Register.next()
-        # except:
-        #     education = await db.select_education(faculty_id=faculty_id)
-            # await msg.answer(trans.translate("Ma'lumot mos kelmadi, iltimos ta'lim shaklingizni qayta tanlang",dest=lang).text, reply_markup=await register_markup(lang, education, row=1))
+        except:
+            education = await db.select_education(faculty_id=faculty_id)
+            await msg.answer(trans.translate("Ma'lumot mos kelmadi, iltimos ta'lim shaklingizni qayta tanlang",dest=lang).text, reply_markup=await register_markup(lang, education, row=1))
 
 @dp.message_handler(state=Register.group)
 async def set_group(msg: Message, state: FSMContext):
@@ -212,25 +214,26 @@ async def set_group(msg: Message, state: FSMContext):
         await msg.answer(trans.translate("Ta'lim shaklingizni tanlang",dest=lang).text, reply_markup=await register_markup(lang, education, row=1))
         await Register.education.set()
     else:
-        # try:
-            phone_number = (await db.select_user(chat_id=msg.from_user.id))[0][4]
+        try:
+            phone_number = await db.select_user_attribute(msg.from_user.id, 'phone')
             if not phone_number:
                 await db.update_user_full_name(chat_id=msg.from_user.id, fullname=full_name)
                 await db.update_user_phone(chat_id=msg.from_user.id, phone=phone)
-            group_id = await db.select_group_id(group, faculty_id, direction_id, course_id, education_id)
-            group_id = str(group_id).replace("[<Record id=UUID('",'').replace("')>]",'')
+            group_id = (await db.select_group_id(group, faculty_id, direction_id, course_id, education_id))[0]['id']
             await db.update_user_group_id(msg.from_user.id, group_id)
+            await db.update_faculty_id(msg.from_user.id, faculty_id)
             await msg.answer(trans.translate("Ma'lumotlaringiz muvaffaqiyatli saqlandi.\nBot haqida ko'proq bilmoqchi bo'lsangiz, /help buyrug'ini bosing.",dest=lang).text)
             await msg.answer(trans.translate("Asosiy menu", dest=lang).text, reply_markup=await main_menu(lang))
             # adminga xabar berish
-            user = (await db.select_user(chat_id=msg.from_user.id))[0]
             admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
             for admin_id in admin_ids:
-                admin_language = (await db.select_botadmin(chat_id=admin_id))[0][5]
-                text = trans.translate(f"➕ {msg.from_user.get_mention(as_html=True)} has been added to the database",dest=admin_language).text + '\n'
-                text += trans.translate("ID:",dest=admin_language).text + '  ' + str(user[9]) + '\n'
-                text += trans.translate("To'liq ismi:",dest=admin_language).text + '  '  + str(user[3]) + '\n'
-                text += trans.translate("Telefon raqam:",dest=admin_language).text + '  '  + str(user[4]) + '\n'
+                admin_language = await db.select_admin_lang(admin_id)
+                full_name = await db.select_user_attribute(msg.from_user.id, 'fullname')
+                phone = await db.select_user_attribute(msg.from_user.id, 'phone')
+                text = trans.translate(f"➕ {str(msg.from_user.get_mention(as_html=True))} has been added to the database",dest=admin_language).text + '\n'
+                text += trans.translate("ID:",dest=admin_language).text + '  ' + str(msg.from_user.id) + '\n'
+                text += trans.translate("To'liq ismi:",dest=admin_language).text + '  '  + str(full_name) + '\n'
+                text += trans.translate("Telefon raqam:",dest=admin_language).text + '  '  + str(phone) + '\n'
                 text += trans.translate("University:",dest=admin_language).text + '  ' + str((await db.select_university(id=university_id))[0][3]) + '\n'
                 text += trans.translate("Faculty:",dest=admin_language).text + '  ' + str((await db.select_faculties(id=faculty_id))[0][3]) + '\n'
                 text += trans.translate("Course:",dest=admin_language).text + '  ' + str((await db.select_course(id=course_id))[0][3]) + '\n'
@@ -240,6 +243,6 @@ async def set_group(msg: Message, state: FSMContext):
                 text += "\n#add_user"
                 await bot.send_message(chat_id=admin_id,text=text)
             await state.finish()
-        # except:
-        #     groups = await db.select_groups_signup(faculty_id=faculty_id, course_id=course_id, direction_id=direction_id, education_id=education_id)
-        #     await msg.answer(trans.translate("Ma'lumot mos kelmadi, iltimos guruhingizni qayta tanlang",dest=lang).text, reply_markup=await register_markup(lang, groups, row=2))    
+        except:
+            groups = await db.select_groups_signup(faculty_id=faculty_id, course_id=course_id, direction_id=direction_id, education_id=education_id)
+            await msg.answer(trans.translate("Ma'lumot mos kelmadi, iltimos guruhingizni qayta tanlang",dest=lang).text, reply_markup=await register_markup(lang, groups, row=2))    

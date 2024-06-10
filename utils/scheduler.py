@@ -41,14 +41,14 @@ async def set_scheduler():
 async def send_message_to_users(lessons):
     today = weekdays[datetime.now(timezone(timedelta(hours=5))).weekday()]
     for lesson in lessons:
-        user_ids = [user[5] for user in (await db.select_user(group_id=lesson[8]))]
+        user_ids = [user[9] for user in (await db.select_user(group_id=lesson[1]))]
         science = await db.select_science(lesson[0])
         teacher = await db.select_teacher(lesson[0])
         room = await db.select_room(lesson[0])
         start_time = await db.select_start_time(lesson[0])
         # await bot.send_message(chat_id=ADMINS[0],text=str(user_ids))
         for user_id in user_ids:
-            language = (await db.select_user(chat_id=user_id))[0][5]
+            language = await db.select_language(user_id)
             lesson_text = f"""
 {trans.translate('Bugun:',dest=language).text} <b>{trans.translate(today, dest=language).text.capitalize()}</b>
 
@@ -84,7 +84,7 @@ async def get_run_date(lesson_start_time) -> datetime:
 # kunlik jadvallarni jo'natish uchun rejalashtirish
 async def plan_schedules(scheduler):
     today = weekdays[datetime.now(timezone(timedelta(hours=5))).weekday()]
-    schedules = await db.select_schedules(day=today)
+    # schedules = await db.select_schedules(day=today)
     start_times = await db.select_time(today)
     for start_time in start_times:
         schedules = await db.select_schedules(day=today,time_id=start_time[0])
@@ -113,5 +113,5 @@ async def plan_schedules(scheduler):
 
 
 if __name__ == '__main__':
-    time = asyncio.run(send_message_to_users())
+    time = asyncio.run(set_scheduler)
     print(time)

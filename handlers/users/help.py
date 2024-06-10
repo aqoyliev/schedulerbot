@@ -13,14 +13,14 @@ trans = Translator()
 async def bot_help(message: types.Message):
     admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
     if message.from_user.id in admin_ids:
-        lang = (await db.select_botadmin(chat_id=message.from_user.id))[0][5]
+        lang = await db.select_language(message.from_user.id)
         text = ("   Botdan to'liq foydalanishingiz uchun botda ro'yxatdan o'tgan bo'lishingiz kerak, ",
                 "agar ro'yxatdan o'tish jarayonida muammo yuzaga kelgan bo'lsa, botga /stop buyrug'ini jo'nating ",
                 "keyin esa /start buyrug'ini jo'natish orqali qayta ro'yxatan o'ting!\n",
                 "   Iltimos adminlik huquqingizni suv istemol qilmang❗️ Aniqrog'i foydalanuvchilarga xabar jo'natish ",
                 "buyrug'idan reklama tarqatishda foydalanmang.\nBiz haqimizda - /about")
     else:
-        lang = (await db.select_user(chat_id=message.from_user.id))[0][5]
+        lang = await db.select_language(message.from_user.id)
         text = ("   Botdan to'liq foydalanishingiz uchun botda ro'yxatdan o'tgan bo'lishingiz kerak, ",
                 "agar ro'yxatdan o'tish jarayonida muammo yuzaga kelgan bo'lsa, botga /stop buyrug'ini jo'nating ",
                 "keyin esa /start buyrug'ini jo'natish orqali qayta ro'yxatan o'ting! ",

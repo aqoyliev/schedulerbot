@@ -27,7 +27,7 @@ async def bot_echo(message: types.Message):
 @dp.message_handler(state=SignUp.register)
 async def bot_echo(message: types.Message):
     user_id = message.from_user.id
-    admin_ids = [id[1] for id in await db.select_all_botadmins()]
+    admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
     if user_id in admin_ids:
         language = await db.select_admin_lang(message.from_user.id)
     else:

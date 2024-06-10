@@ -14,9 +14,9 @@ trans = Translator()
 async def bot_about(message: types.Message):
     admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
     if message.from_user.id in admin_ids:
-        lang = (await db.select_botadmin(chat_id=message.from_user.id))[0][5]     
+        lang = await db.select_admin_lang(message.from_user.id)
     else:
-        lang = (await db.select_user(chat_id=message.from_user.id))[0][5]
+        lang = await db.select_language(message.from_user.id)
     text = ("Bizning jamoa",
             "<a href='t.me/QuvonchbekMuysinov'>Quvonchbek Muysinov</a> - Backend dasturchi",
             # "<a href='t.me/Jaloliddin0205'>Jaloliddin Nasrullayev</a> - Backend dasturchi",

@@ -23,6 +23,11 @@ trans = Translator()
 
 weekdays = ['Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba','Yakshanba']
 
+# @dp.message_handler(text = 'test')
+# async def show_settings(msg: Message):
+#     name = await db.select_attribute('groups','a3f5efe6-e5fc-4414-9f97-f8af0b026517','name')
+#     await msg.answer(name)
+
 @dp.message_handler(text = ['⚙️ Settings','⚙️ Sozlamalar','⚙️ Настройки'])
 async def show_settings(msg: Message):
     admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
@@ -53,10 +58,13 @@ async def change_data(msg: Message, state: FSMContext):
         # course = (await db.select_course(id=mix[1]))[0][1]
         # direction = (await db.select_directions(id=mix[2]))[0][1]
         # education = (await db.select_education(id=mix[3]))[0][1]
-        group = (await db.select_groups(id=user[4]))[0][8]
+        full_name = await db.select_user_attribute(msg.from_user.id, 'fullname')
+        phone = await db.select_user_attribute(msg.from_user.id, 'phone')
+        group_id = await db.select_user_attribute(msg.from_user.id, 'group_id')
+        group = await db.select_attribute('groups', group_id, 'name')
         text = trans.translate("Sizning ma'lumotlaringiz",dest=lang).text + '\n\n'
-        text += trans.translate("Ism familiya:",dest=lang).text.capitalize() + '  ' + user[3] + '\n'
-        text += trans.translate("Telefon raqam:",dest=lang).text.capitalize() + '  ' + user[4] + '\n'
+        text += trans.translate("Ism familiya:",dest=lang).text.capitalize() + '  ' + full_name + '\n'
+        text += trans.translate("Telefon raqam:",dest=lang).text.capitalize() + '  ' + phone + '\n'
         # text += trans.translate("University:",dest=lang).text.capitalize() + '  ' + university + '\n'
         # text += trans.translate("Faculty:",dest=lang).text.capitalize() + '  ' + faculty + '\n'
         # text += trans.translate("Course:",dest=lang).text.capitalize() + '  ' + str(course) + '\n'
@@ -69,10 +77,11 @@ async def change_data(msg: Message, state: FSMContext):
         await state.update_data(msg_id=str(data_msg.message_id))
     else:
         lang = await db.select_language(msg.from_user.id)
-        user = (await db.select_botadmin(chat_id=msg.from_user.id))[0]
+        full_name = await db.select_admin_attribute(msg.from_user.id, 'fullname')
+        phone = await db.select_admin_attribute(msg.from_user.id, 'phone')
         text = trans.translate("Sizning ma'lumotlaringiz",dest=lang).text + '\n\n'
-        text += trans.translate("Ism familiya:",dest=lang).text.capitalize() + '  ' + user[3] + '\n'
-        text += trans.translate("Telefon raqam:",dest=lang).text.capitalize() + '  ' + user[4] + '\n\n'
+        text += trans.translate("Ism familiya:",dest=lang).text.capitalize() + '  ' + full_name + '\n'
+        text += trans.translate("Telefon raqam:",dest=lang).text.capitalize() + '  ' + phone + '\n\n'
         # text += trans.translate("Ma'lumotlarni o'zgartirish uchun tugmalar 👇",dest=lang).text
         await msg.answer(msg.text,reply_markup=await cancel_button(lang))
         data_msg = await msg.answer(text,reply_markup=await change_data_for_admin_markup(lang))
@@ -80,7 +89,7 @@ async def change_data(msg: Message, state: FSMContext):
 
 @dp.message_handler(text = ['🔙 Main menu',"🔙 Asosiy menyu",'🔙 Главное меню'])
 async def show_languages(msg: Message):
-    admin_ids = [id[1] for id in await db.select_all_botadmins()]
+    admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
     if msg.from_user.id in admin_ids:
         lang = await db.select_language(msg.from_user.id)
         await msg.answer(trans.translate("Asosiy menyu",dest=lang).text, reply_markup=await admin_menu(lang))
@@ -93,7 +102,7 @@ async def today_schedule_handler(msg: Message):
     admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
     if msg.from_user.id not in admin_ids:
         lang = await db.select_language(msg.from_user.id)
-        group_id = (await db.select_user(chat_id=msg.from_user.id))[0][8]
+        group_id = await db.select_user_attribute(msg.from_user.id, 'group_id')
         day = weekdays[datetime.now(timezone(timedelta(hours=5))).weekday()]
         schedule = await get_schedules('Today', group_id, day, lang)
         # photo_id = "https://telegra.ph/file/609ab0fe62d76fd03d899.png"
@@ -108,7 +117,7 @@ async def tomorrow_schedule_handler(msg: Message):
     if msg.from_user.id not in admin_ids:
         lang = await db.select_language(msg.from_user.id)
         user_id = str(msg.from_user.id)
-        group_id = (await db.select_user(chat_id=user_id))[0][8]
+        group_id = await db.select_user_attribute(msg.from_user.id, 'group_id')
         day = weekdays[(datetime.now(timezone(timedelta(hours=5))).weekday()+1)%7]
         schedule = await get_schedules('Tomorrow', group_id, day, lang)
         # photo_id = "https://telegra.ph/file/609ab0fe62d76fd03d899.png"
@@ -121,8 +130,8 @@ async def tomorrow_schedule_handler(msg: Message):
 async def full_schedule_handler(msg: Message):
     admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
     if msg.from_user.id not in admin_ids:
-        user = (await db.select_user(chat_id=msg.from_user.id))[0]
-        lang, group_id = user[5], user[8]
+        lang = await db.select_language(msg.from_user.id)
+        group_id = await db.select_user_attribute(msg.from_user.id, 'group_id')
         # photo_id = 'https://telegra.ph/file/609ab0fe62d76fd03d899.png'
         for day in weekdays:
             schedule = await get_full_schedules(group_id, day, lang)
@@ -131,33 +140,33 @@ async def full_schedule_handler(msg: Message):
     else:
         await bot_echo(msg)
 
-@dp.message_handler(Command('universities'))
-async def send_universities(message: Message):
-    admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
-    if message.from_user.id in admin_ids:
-        lang = (await db.select_botadmin(chat_id=message.from_user.id))[0][5]
-    else:
-        lang = (await db.select_user(chat_id=message.from_user.id))[0][5]
-    universities = await db.select_all_universities()
-    text, k = '', 1
-    for university in universities:
-        text += f"<b>{k}</b>. " + str(university[1]) + '\n'
-        k += 1
-    await message.answer(text)
+# @dp.message_handler(Command('universities'))
+# async def send_universities(message: Message):
+#     admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
+#     if message.from_user.id in admin_ids:
+#         lang = await db.select_admin_lang(message.from_user.id)
+#     else:
+#         lang = await db.select_language(message.from_user.id)
+#     universities = await db.select_all_universities()
+#     text, k = '', 1
+#     for university in universities:
+#         text += f"<b>{k}</b>. " + str(university[1]) + '\n'
+#         k += 1
+#     await message.answer(text)
 
-@dp.message_handler(Command('universities'),state=SignUp.register)
-async def send_universities(message: Message):
-    admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
-    if message.from_user.id in admin_ids:
-        lang = (await db.select_botadmin(chat_id=message.from_user.id))[0][5]
-    else:
-        lang = (await db.select_user(chat_id=message.from_user.id))[0][5]
-    universities = await db.select_all_universities()
-    text, k = '', 1
-    for university in universities:
-        text += f"<b>{k}</b>. " + str(university[1]) + '\n'
-        k += 1
-    await message.answer(text)
+# @dp.message_handler(Command('universities'),state=SignUp.register)
+# async def send_universities(message: Message):
+#     admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
+#     if message.from_user.id in admin_ids:
+#         lang = await db.select_admin_lang(message.from_user.id)
+#     else:
+#         lang = await db.select_language(message.from_user.id)
+#     universities = await db.select_all_universities()
+#     text, k = '', 1
+#     for university in universities:
+#         text += f"<b>{k}</b>. " + str(university[1]) + '\n'
+#         k += 1
+#     await message.answer(text)
 
 @dp.message_handler(text=["🚫 Bekor qilish","🚫 Cancel", "🚫 Отмена"])
 async def cancel(message: Message, state: FSMContext):
@@ -169,10 +178,10 @@ async def cancel(message: Message, state: FSMContext):
         pass
     admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
     if message.from_user.id in admin_ids:
-        lang = (await db.select_botadmin(chat_id=message.from_user.id))[0][5]
+        lang = await db.select_admin_lang(message.from_user.id)
         await message.answer(trans.translate("Asosiy menyu",dest=lang).text, reply_markup=await admin_menu(lang))
     else:
-        lang = (await db.select_user(chat_id=message.from_user.id))[0][5]
+        lang = await db.select_language(message.from_user.id)
         await message.answer(trans.translate("Asosiy menyu",dest=lang).text, reply_markup=await main_menu(lang))
 
 # @dp.message_handler(text = ['📜 Aboout us','📜 Biz haqimizda','📜 О нас'])
@@ -183,7 +192,7 @@ async def cancel(message: Message, state: FSMContext):
 #             "<a href='t.me/nosirovbehzodjon'>Behzodjon Nosirov</a> - Frontend dasturchi",
 #             "<a href='t.me/akbarqoyliev'>Akbar Qo'yliyev</a> - Telegram bot dasturchi\n",
 #             "Botning muhokama chati - @talabagaxabar")
-#     admin_ids = [id[1] for id in await db.select_all_botadmins()]
+#     admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
 #     if msg.from_user.id not in admin_ids:
 #         lang = await db.select_language(msg.from_user.id)
 #         await msg.answer(msg.text, reply_markup=await settings_markup(lang))

@@ -94,6 +94,10 @@ class Database:
         """
         return await self.execute(sql, execute=True)
     
+    async def update_faculty_id(self, chat_id, faculty_id):
+        sql = f"UPDATE botusers SET faculty_id='{faculty_id}' WHERE chat_id={chat_id};"
+        return await self.execute(sql, execute=True)
+
     async def update_username(self, chat_id, username):
         sql = f"""
         UPDATE botusers SET username='{username}' WHERE chat_id={chat_id};
@@ -118,6 +122,10 @@ class Database:
         return await self.execute(sql, execute=True)
     
     # select commands
+    async def select_attribute(self, table_name:str, id:str, target:str):
+        sql = f"SELECT {target} FROM {table_name} WHERE id = '{id}';"
+        return await self.execute(sql, fetchval=True)
+
     async def select_all_universities(self):
         sql = "SELECT * FROM universities"
         return await self.execute(sql, fetch=True)
@@ -147,6 +155,9 @@ class Database:
         sql = self.format_args(sql, parameters=kwargs)
         return await self.execute(sql, fetch=True)
     
+    async def select_schedules_attribute(self, day, time_id):
+        sql = f"SELECT id, group_id FROM schedules WHERE day = '{day}' AND time_id = '{time_id}';"
+    
     async def select_courses(self):
         sql = "SELECT * FROM courses"
         return await self.execute(sql, fetch=True)
@@ -157,6 +168,10 @@ class Database:
         return await self.execute(sql, fetch=True)
     
     # commands for botadmins
+    async def select_admin_attribute(self, chat_id, target):
+        sql = f"SELECT {target} from botadmins WHERE chat_id={chat_id};"
+        return await self.execute(sql, fetchval=True)
+
     async def select_all_botadmins(self):
         sql = "SELECT * FROM botadmins;"
         return await self.execute(sql, fetch=True)
@@ -171,7 +186,7 @@ class Database:
         return await self.execute(sql, fetch=True)
     
     async def select_admin_lang(self, chat_id):
-        sql = f"SELECT language from botadmins WHERE chat_id='{chat_id}';"
+        sql = f"SELECT language from botadmins WHERE chat_id={chat_id};"
         return await self.execute(sql, fetchval=True)
     
     async def add_botadmin(self, chat_id):

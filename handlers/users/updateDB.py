@@ -24,10 +24,10 @@ lang_dict = {'en':"🇬🇧 English is selected",'ru':'🇷🇺 Выбран р�
 @dp.callback_query_handler(lang_callback.filter())
 async def update_language(call: CallbackQuery,state: FSMContext):
     lang = call.data.split(':')[1]
-    admin_ids = [id[8] for id in await db.select_all_botadmins()]
+    admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
     if call.from_user.id in admin_ids:
         await db.update_botadmin_language(chat_id=call.from_user.id, language=lang)
-        full_name = (await db.select_botadmin(chat_id=call.from_user.id))[0][3]
+        full_name = await db.select_admin_attribute(call.from_user.id, 'fullname')
         if full_name is None:
             await call.message.answer(trans.translate(f"Assalomu alaykum {call.from_user.full_name}, Botga xush kelibsiz!\n"
                                                       "Bu bot talabalarga juda yaxshi yordamchi bo'la oladi. (Ko'proq ma'lumot uchun - /help).\n"
@@ -37,7 +37,7 @@ async def update_language(call: CallbackQuery,state: FSMContext):
             await call.message.answer(text=lang_dict[lang], reply_markup=await admin_menu(lang))
     else:
         await db.update_language(chat_id=call.from_user.id, language=lang)
-        full_name = (await db.select_user(chat_id=call.from_user.id))[0][3]
+        full_name = await db.select_user_attribute(call.from_user.id, 'fullname')
         if full_name is None:
             await call.message.answer(trans.translate(f"Assalomu alaykum {call.from_user.full_name}, Botga xush kelibsiz!\n"
                                                       "Bu bot talabalarga juda yaxshi yordamchi bo'la oladi. (Ko'proq ma'lumot uchun - /help).\n"
@@ -57,9 +57,9 @@ async def update_data(call: CallbackQuery, state: FSMContext):
     except:
         pass
     item = call.data.split(':')[1]
-    admin_ids = [id[1] for id in await db.select_all_botadmins()]
+    admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
     if call.from_user.id in admin_ids:
-        lang = (await db.select_botadmin(chat_id=call.from_user.id))[0][5]
+        lang = await db.select_language(call.from_user.id)
         if item == 'full_name':
             await call.message.answer(trans.translate("Iltimos ismingizni va familiyangizni kiriting!",dest=lang).text,reply_markup=ReplyKeyboardRemove(True))
             await AdminRegister.full_name.set()
@@ -67,7 +67,7 @@ async def update_data(call: CallbackQuery, state: FSMContext):
             await call.message.answer(trans.translate("Telefon raqamingizni jo'nating!\nNamuna: +998901234567",dest=lang).text,reply_markup=ReplyKeyboardRemove(True))
             await AdminRegister.phone_number.set()
     else:
-        lang = (await db.select_user(chat_id=call.from_user.id))[0][5]
+        lang = await db.select_language(call.from_user.id)
         if item == 'full_name':
             await call.message.answer(trans.translate("Iltimos ismingizni va familiyangizni kiriting!",dest=lang).text,reply_markup=ReplyKeyboardRemove(True))
             await Register.full_name.set()
@@ -75,6 +75,7 @@ async def update_data(call: CallbackQuery, state: FSMContext):
             await call.message.answer(trans.translate("Telefon raqamingizni jo'nating!\nNamuna: +998901234567",dest=lang).text,reply_markup=ReplyKeyboardRemove(True))
             await Register.phone_number.set()
         elif item == 'group':
+            lang = await db.select_language(call.from_user.id)
             universities = await db.select_all_universities()
-            await call.message.answer(trans.translate("Universitetingizni tanlang!",dest=lang).text, reply_markup=await register_markup(universities, row=1))
+            await call.message.answer(trans.translate("Universitetingizni tanlang!",dest=lang).text, reply_markup=await register_markup(lang, universities, row=1))
             await Register.university.set()
