@@ -16,7 +16,7 @@ async def get_schedules(when='Today', group_id=None, day=None, language='en'):
     try:
         lessons = await db.select_schedules(group_id=group_id, day=day)
         lessons = [list(lesson) for lesson in lessons]
-        lessons.sort(key=lambda lesson: lesson[5])
+        # lessons.sort(key=lambda lesson: lesson[5])
         schedule = f"{trans.translate(when,dest=language).text.capitalize()}:  <b>{trans.translate(day,dest=language).text.capitalize()}</b>\n"
         lessons_list, k = [], 1
         for lesson in lessons:
