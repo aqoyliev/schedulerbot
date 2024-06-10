@@ -109,7 +109,7 @@ async def approve_post(call: CallbackQuery):
             await message.send_copy(chat_id=user_id)
         except:
             pass
-        asyncio.sleep(00.1)
+        asyncio.sleep(0.1)
     await call.message.answer(trans.translate("Asosiy menyu",dest=lang).text, reply_markup=await admin_menu(lang))
     # adminga xabar berish
     admin_lang = await db.select_admin_lang(chat_id=ADMINS[0])

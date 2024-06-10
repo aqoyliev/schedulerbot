@@ -1,5 +1,4 @@
 import asyncio
-from calendar import weekday
 import logging
 from time import timezone
 from datetime import datetime, timedelta, timezone
@@ -21,7 +20,8 @@ trans = Translator()
 logger = logging.getLogger(__name__)
 
 # weekdays = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday']
-weekdays = ['dushanba','seshanba','chorshanba','payshanba','juma','shanba','yakshanba']
+weekdays = ['Dushanba', 'Seshanba', 'Chorshanba', 'Payshanba', 'Juma', 'Shanba', 'Yakshanba']
+
 
 # qanaqadir ikir-chikir sozlamalar
 def register_all_middlewares(scheduler):
@@ -39,18 +39,17 @@ async def set_scheduler():
     
 # foydalanuvchilarga jadvallarini jo'natish
 async def send_message_to_users(lessons):
-    today = weekdays[datetime.now(timezone(timedelta(hours=5))).weekday()]
     for lesson in lessons:
-        user_ids = [user[9] for user in (await db.select_user(group_id=lesson[1]))]
-        science = await db.select_science(lesson[0])
-        teacher = await db.select_teacher(lesson[0])
-        room = await db.select_room(lesson[0])
-        start_time = await db.select_start_time(lesson[0])
+        user_ids = [user['chat_id'] for user in (await db.select_user(group_id=lesson['group_id']))]
+        science = await db.select_science(lesson['id'])
+        teacher = await db.select_teacher(lesson['id'])
+        room = await db.select_room(lesson['id'])
+        start_time = await db.select_start_time(lesson['id'])
         # await bot.send_message(chat_id=ADMINS[0],text=str(user_ids))
         for user_id in user_ids:
             language = await db.select_language(user_id)
             lesson_text = f"""
-{trans.translate('Bugun:',dest=language).text} <b>{trans.translate(today, dest=language).text.capitalize()}</b>
+{trans.translate('Bugun:',dest=language).text} <b>{trans.translate(lesson['day'], dest=language).text.capitalize()}</b>
 
 {trans.translate('Science:',dest=language).text} <i>{science}</i>
 {trans.translate("O'qituvchi",dest=language).text}:  {teacher}
@@ -63,7 +62,7 @@ async def send_message_to_users(lessons):
                 await bot.send_message(chat_id=user_id, text=lesson_text)
             except:
                 pass
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.05)
 
 
 # adminlarga xabar jo'natish
@@ -87,12 +86,12 @@ async def plan_schedules(scheduler):
     # schedules = await db.select_schedules(day=today)
     start_times = await db.select_time(today)
     for start_time in start_times:
-        schedules = await db.select_schedules(day=today,time_id=start_time[0])
-        run_date = await get_run_date(start_time[1])
-        scheduler.add_job(send_message_to_users, 'date', run_date=run_date,
+        schedules = await db.select_schedules(day=today,time_id=start_time['id'])
+        run_time = await get_run_date(start_time['name'])
+        scheduler.add_job(send_message_to_users, 'date', run_date=run_time,
                         #   end_date=(datetime.now()+timedelta(hours=23)),
                           args=(schedules,))
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(0.05)
 
     # for schedule in schedules:
     #     lesson_id = schedule[0]

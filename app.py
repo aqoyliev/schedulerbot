@@ -9,8 +9,9 @@ from utils.scheduler import set_scheduler
 
 async def on_startup(dispatcher):
     await db.create()
+    
     # ogohlantiruvchi funksiyani ishga tushurish
-    # await set_scheduler()
+    await set_scheduler()
     
     # Birlamchi komandalar (/star va /help)
     await set_default_commands(dispatcher)

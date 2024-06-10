@@ -23,10 +23,10 @@ trans = Translator()
 
 weekdays = ['Dushanba','Seshanba','Chorshanba','Payshanba','Juma','Shanba','Yakshanba']
 
+
 # @dp.message_handler(text = 'test')
 # async def show_settings(msg: Message):
-#     name = await db.select_attribute('groups','a3f5efe6-e5fc-4414-9f97-f8af0b026517','name')
-#     await msg.answer(name)
+#     await plan_schedules()
 
 @dp.message_handler(text = ['⚙️ Settings','⚙️ Sozlamalar','⚙️ Настройки'])
 async def show_settings(msg: Message):

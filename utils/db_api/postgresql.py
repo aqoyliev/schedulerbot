@@ -295,25 +295,29 @@ class Database:
         FROM schedules AS s 
         LEFT JOIN sciences AS sc ON s.science_id = sc.id WHERE s.id = '{lesson_id}';
         """
-        return await self.execute(sql, fetch=True)
+        return await self.execute(sql, fetchval=True)
     
     async def select_teacher(self, lesson_id):
         sql = f"""SELECT t.name 
         FROM schedules AS s 
         LEFT JOIN teachers AS t ON s.teacher_id = t.id WHERE s.id = '{lesson_id}';
         """
-        return await self.execute(sql, fetch=True)
+        return await self.execute(sql, fetchval=True)
     
     async def select_room(self, lesson_id):
         sql = f"""SELECT r.name 
         FROM schedules AS s 
         LEFT JOIN rooms AS r ON s.room_id = r.id WHERE s.id = '{lesson_id}';
         """
-        return await self.execute(sql, fetch=True)
+        return await self.execute(sql, fetchval=True)
     
     async def select_start_time(self, lesson_id):
         sql = f"""SELECT t.name 
         FROM schedules AS s 
         LEFT JOIN times AS t ON s.time_id = t.id WHERE s.id = '{lesson_id}';
         """
-        return await self.execute(sql, fetch=True)
+        return await self.execute(sql, fetchval=True)
+    
+    async def select_time_name(self, id):
+        sql = f"SELECT name FROM times WHERE id='{id}';"
+        return await self.execute(sql, fetchval=True)

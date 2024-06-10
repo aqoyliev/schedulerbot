@@ -20,10 +20,10 @@ async def get_schedules(when='Today', group_id=None, day=None, language='en'):
         schedule = f"{trans.translate(when,dest=language).text.capitalize()}:  <b>{trans.translate(day,dest=language).text.capitalize()}</b>\n"
         lessons_list, k = [], 1
         for lesson in lessons:
-            science = str(await db.select_science(lesson[0])).replace("[<Record name='","").replace("'>]","")
-            teacher = str(await db.select_teacher(lesson[0])).replace("[<Record name='","").replace("'>]","")
-            room = str(await db.select_room(lesson[0])).replace("[<Record name='","").replace("'>]","")
-            start_time = str(await db.select_start_time(lesson[0])).replace("[<Record name='","").replace("'>]","")
+            science = str(await db.select_science(lesson['id']))
+            teacher = str(await db.select_teacher(lesson['id']))
+            room = str(await db.select_room(lesson['id']))
+            start_time = str(await db.select_start_time(lesson['id']))
             lessons_list.append(
         f"""
 {k}. <i>{science}</i>
@@ -41,17 +41,15 @@ async def get_schedules(when='Today', group_id=None, day=None, language='en'):
 # to'liq haftalik dars jadvalni jo'natish
 async def get_full_schedules(group_id, day, language):
     # try:
-        # day = trans.translate(day,dest=language).text.lower()
         lessons = await db.select_schedules(group_id=group_id, day=day)
-        lessons = [list(lesson) for lesson in lessons]
-        # lessons.sort(key=lambda lesson: lesson[5])
+        # lessons.sort(key=lambda lesson: db.select_time_name(lesson['time_id']))
         schedule = f"{trans.translate('Day:',dest=language).text.capitalize()}  <b>{trans.translate(day,dest=language).text.capitalize()}</b>\n"
         lessons_list, k = [], 1
         for lesson in lessons:
-            science = str(await db.select_science(lesson[0])).replace("[<Record name='","").replace("'>]","")
-            teacher = str(await db.select_teacher(lesson[0])).replace("[<Record name='","").replace("'>]","")
-            room = str(await db.select_room(lesson[0])).replace("[<Record name='","").replace("'>]","")
-            start_time = str(await db.select_start_time(lesson[0])).replace("[<Record name='","").replace("'>]","")
+            science = str(await db.select_science(lesson['id']))
+            teacher = str(await db.select_teacher(lesson['id']))
+            room = str(await db.select_room(lesson['id']))
+            start_time = str(await db.select_start_time(lesson['id']))
             lessons_list.append(
         f"""
 {k}. <i>{science}</i>
@@ -62,7 +60,7 @@ async def get_full_schedules(group_id, day, language):
             )
             k += 1
         schedule += "\n********************\n".join(lessons_list)
-        return schedule if (len(schedule) > 30) else None
+        return schedule if (len(schedule) > 50) else None
     # except:
     #     return trans.translate("Jadval topilmadi😔\nBazadan ma'lumotlarni olishda muammo yuzaga keldi.",dest=language).text
 

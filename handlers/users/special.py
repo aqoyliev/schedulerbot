@@ -42,7 +42,7 @@ async def reply_message(msg: Message):
 # barcha foydalanuvchilarga xabar jo'natish adminlardan tashqari
 @dp.message_handler(Command("ad"), user_id=ADMINS[0])
 async def ad(message: Message):
-    admin_ids = [id[8] for id in await db.select_all_botadmins()]
+    admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
     if message.from_user.id in admin_ids:
         lang = await db.select_admin_lang(message.from_user.id)
         await message.answer(trans.translate("Chop etish uchun post yuboring.",dest=lang).text)
@@ -59,15 +59,14 @@ async def enter_message(message: Message, state: FSMContext):
 
 @dp.callback_query_handler(ad_callback.filter(action="post"), user_id=ADMINS[0])
 async def approve_post(call: CallbackQuery):
-    admin = (await db.select_botadmin(chat_id=call.from_user.id))[0]
-    lang, faculty_id = admin[5], admin[6]
+    lang = await db.select_admin_lang(call.from_user.id)
     await call.answer(trans.translate("Chop etishga ruhsat berdingiz.",dest=lang).text)
     await call.message.edit_reply_markup()
     message = call.message.reply_to_message
-    users = await db.select_all_users()
-    for user in users:
+    user_ids = [record['chat_id'] for record in await db.select_user_ids()]
+    for user_id in user_ids:
         try:
-            await message.send_copy(chat_id=user[1])
+            await message.send_copy(chat_id=user_id)
         except:
             pass
         asyncio.sleep(00.1)
@@ -81,7 +80,7 @@ async def decline_post(call: CallbackQuery):
 # adminlarga xabar jo'natish
 @dp.message_handler(Command("send_message_admins"), user_id=ADMINS[0])
 async def send_message_to_admins(message: Message):
-    admin_ids = [id[1] for id in await db.select_all_botadmins()]
+    admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
     if message.from_user.id in admin_ids:
         lang = await db.select_admin_lang(message.from_user.id)
         await message.answer(trans.translate("Chop etish uchun post yuboring.",dest=lang).text)
@@ -103,10 +102,10 @@ async def approve_post(call: CallbackQuery):
     await call.answer(trans.translate("Chop etishga ruhsat berdingiz.",dest=lang).text)
     await call.message.edit_reply_markup()
     message = call.message.reply_to_message
-    users = await db.select_all_botadmins()
-    for user in users:
+    admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
+    for id in admin_ids:
         try:
-            await message.send_copy(chat_id=user[1])
+            await message.send_copy(chat_id=id)
         except:
             pass
         asyncio.sleep(00.1)
