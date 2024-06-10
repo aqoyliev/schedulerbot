@@ -11,7 +11,7 @@ from googletrans import Translator
 trans = Translator()
 
 
-@dp.message_handler(text="/stop", state=any_state)
+# @dp.message_handler(text="/stop", state=any_state)
 @dp.my_chat_member_handler(state=any_state)
 async def delete_user(member: types.ChatMemberUpdated, state: FSMContext):
     await state.finish()

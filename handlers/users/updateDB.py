@@ -59,7 +59,7 @@ async def update_data(call: CallbackQuery, state: FSMContext):
     item = call.data.split(':')[1]
     admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
     if call.from_user.id in admin_ids:
-        lang = await db.select_language(call.from_user.id)
+        lang = await db.select_admin_lang(call.from_user.id)
         if item == 'full_name':
             await call.message.answer(trans.translate("Iltimos ismingizni va familiyangizni kiriting!",dest=lang).text,reply_markup=ReplyKeyboardRemove(True))
             await AdminRegister.full_name.set()

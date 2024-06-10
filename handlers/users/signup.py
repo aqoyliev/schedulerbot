@@ -38,14 +38,14 @@ async def full_name_handler(msg: Message, state: FSMContext):
     lang = await db.select_language(msg.from_user.id)
     full_name = msg.text.replace("'","''")
     try:
-        await state.update_data(full_name=full_name)
+        await state.update_data(full_name=msg.from_user.id)
         phone_number = await db.select_user_attribute(msg.from_user.id, 'phone')
         if not phone_number:
             await msg.answer(trans.translate("Telefon raqamingizni jo'nating!\nNamuna: +998901234567",dest=lang).text, reply_markup=await back_markup(lang))
             await Register.phone_number.set()
         else:
-            await db.update_user_full_name(msg.from_user.id, msg.text)
-            await msg.answer(trans.translate("Ism familiyangiz ma'lumotlar bazasiga muvaffaqiyatli saqlandi ✅",dest=lang).text)
+            await db.update_user_full_name(msg.from_user.id, full_name)
+            await msg.answer(trans.translate("Ism familiyangiz muvaffaqiyatli saqlandi✅",dest=lang).text)
             await msg.answer(trans.translate("Asosiy menyu",dest=lang).text, reply_markup=await main_menu(lang))
             await state.finish()
     except:
@@ -69,7 +69,7 @@ async def phone_number_handler(msg: Message, state: FSMContext):
                 await Register.university.set()
             else:
                 await db.update_user_phone(msg.from_user.id, msg.text)
-                await msg.answer(trans.translate("Telefon raqamingiz ma'lumotlar bazasiga muvaffaqiyatli saqlandi ✅",dest=lang).text)
+                await msg.answer(trans.translate("Telefon raqamingiz muvaffaqiyatli saqlandi✅",dest=lang).text)
                 await msg.answer(trans.translate("Asosiy menyu",dest=lang).text, reply_markup=await main_menu(lang))
                 await state.finish()
         except:
@@ -215,6 +215,8 @@ async def set_group(msg: Message, state: FSMContext):
         await Register.education.set()
     else:
         try:
+            await msg.answer(trans.translate("Ma'lumotlaringiz muvaffaqiyatli saqlandi.\nBot haqida ko'proq bilmoqchi bo'lsangiz, /help buyrug'ini bosing.",dest=lang).text)
+            await msg.answer(trans.translate("Asosiy menu", dest=lang).text, reply_markup=await main_menu(lang))
             phone_number = await db.select_user_attribute(msg.from_user.id, 'phone')
             if not phone_number:
                 await db.update_user_full_name(chat_id=msg.from_user.id, fullname=full_name)
@@ -222,8 +224,6 @@ async def set_group(msg: Message, state: FSMContext):
             group_id = (await db.select_group_id(group, faculty_id, direction_id, course_id, education_id))[0]['id']
             await db.update_user_group_id(msg.from_user.id, group_id)
             await db.update_faculty_id(msg.from_user.id, faculty_id)
-            await msg.answer(trans.translate("Ma'lumotlaringiz muvaffaqiyatli saqlandi.\nBot haqida ko'proq bilmoqchi bo'lsangiz, /help buyrug'ini bosing.",dest=lang).text)
-            await msg.answer(trans.translate("Asosiy menu", dest=lang).text, reply_markup=await main_menu(lang))
             # adminga xabar berish
             admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
             for admin_id in admin_ids:

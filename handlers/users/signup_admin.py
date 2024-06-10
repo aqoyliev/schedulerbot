@@ -29,7 +29,7 @@ async def full_name_handler(msg: Message, state: FSMContext):
             await msg.answer(trans.translate("Telefon raqamingizni jo'nating!\nNamuna: +998901234567",dest=lang).text)
             await AdminRegister.phone_number.set()
         else:
-            await msg.answer(trans.translate("Ism familiyangiz ma'lumotlar bazasiga muvaffaqiyatli saqlandi ✅",dest=lang).text)
+            await msg.answer(trans.translate("Ma'lumotingiz muvaffaqiyatli saqlandi✅",dest=lang).text)
             await msg.answer(trans.translate("Asosiy menyu",dest=lang).text, reply_markup=await admin_menu(lang))
             await state.finish()
     except:
@@ -50,13 +50,13 @@ async def phone_number_handler(msg: Message, state: FSMContext):
             # user = await db.select_botadmin(chat_id=msg.from_user.id)
             # faculty = await db.select_faculties(id=user[0][6])
             # university = (await db.select_university(id=faculty[0][2]))[0][1]
-            admin_lang = await db.select_language(ADMINS[0])
+            admin_lang = await db.select_admin_lang(ADMINS[0])
             full_name = await db.select_admin_attribute(msg.from_user.id, 'fullname')
             phone = await db.select_admin_attribute(msg.from_user.id, 'phone')
             text = trans.translate(f"😎 {msg.from_user.get_mention(as_html=True)} has been added to the database of admins",dest=admin_lang).text + '\n'
             text += trans.translate("ID:",dest=admin_lang).text + '  ' + str(msg.from_user.id) + '\n'
             if msg.from_user.username:
-                text += trans.translate(f"To'liq ismi:",dest=admin_lang).text + '  '  + f"<a href='https://t.me/{msg.from_user.username}'>{full_name}</a>:" + '\n'
+                text += trans.translate(f"To'liq ismi:",dest=admin_lang).text + '  '  + f"<a href='https://t.me/{msg.from_user.username}'>{full_name}</a>" + '\n'
             else:
                 text += trans.translate(f"To'liq ismi:",dest=admin_lang).text + ' ' + full_name + '\n'
             text += trans.translate("Telefon raqam:",dest=admin_lang).text + '  '  + phone + '\n'
