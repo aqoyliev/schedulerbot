@@ -32,13 +32,14 @@ async def get_schedules(when='Today', group_id=None, day=None, language='en'):
             )
             k += 1
         schedule += "\n********************\n".join(lessons_list)
-        return schedule if (len(schedule) > 100) else trans.translate("Jadval topilmadi😔",dest=language).text
+        # return schedule if (len(schedule) < 150) else trans.translate("Jadval topilmadi😔",dest=language).text
+        return schedule
     except:
         return trans.translate("Jadval topilmadi😔\nBazadan ma'lumotlarni olishda muammo yuzaga keldi.",dest=language).text
 
 # to'liq haftalik dars jadvalni jo'natish
 async def get_full_schedules(group_id, day, language):
-    # try:
+    try:
         lessons = await db.select_schedules(group_id=group_id, day=day)
         # lessons.sort(key=lambda lesson: db.select_time_name(lesson['time_id']))
         schedule = f"{trans.translate('Day:',dest=language).text.capitalize()}  <b>{trans.translate(day,dest=language).text.capitalize()}</b>\n"
@@ -58,9 +59,10 @@ async def get_full_schedules(group_id, day, language):
             )
             k += 1
         schedule += "\n********************\n".join(lessons_list)
-        return schedule if (len(schedule) > 50) else None
-    # except:
-    #     return trans.translate("Jadval topilmadi😔\nBazadan ma'lumotlarni olishda muammo yuzaga keldi.",dest=language).text
+        # return schedule if (len(schedule) < 150) else None
+        return schedule
+    except:
+        return trans.translate("Jadval topilmadi😔\nBazadan ma'lumotlarni olishda muammo yuzaga keldi.",dest=language).text
 
 
 # print(asyncio.run(get_schedule('3e9c1058-baa2-476a-9ab9-1c6d1023c615','uz')))
