@@ -36,6 +36,8 @@ async def restart(message: Message):
     admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
     if message.from_user.id in admin_ids:
         await set_scheduler()
+        lang = await db.select_admin_lang(message.from_user.id)
+        await message.answer(trans.translate(f"Dars jadvalini jo'natish qayta ishga tushdi.",dest=lang).text)
     else:
         await bot_echo(message)
 

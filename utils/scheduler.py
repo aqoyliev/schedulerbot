@@ -83,24 +83,16 @@ async def get_run_date(lesson_start_time) -> datetime:
 # kunlik jadvallarni jo'natish uchun rejalashtirish
 async def plan_schedules(scheduler):
     today = weekdays[datetime.now(timezone(timedelta(hours=5))).weekday()]
-    # schedules = await db.select_schedules(day=today)
-    start_times = await db.select_time(today)
+    schedules = await db.select_schedules(day=today)
+    start_times = set(await db.select_time(today))
     for start_time in start_times:
         schedules = await db.select_schedules(day=today,time_id=start_time['id'])
         run_time = await get_run_date(start_time['name'])
         scheduler.add_job(send_message_to_users, 'date', run_date=run_time,
                         #   end_date=(datetime.now()+timedelta(hours=23)),
                           args=(schedules,))
-        await asyncio.sleep(0.05)
+        # await asyncio.sleep(0.05)
 
-    # for schedule in schedules:
-    #     lesson_id = schedule[0]
-    #     # user_ids = [user[1] for user in (await db.select_user(user_group_id=schedule[6]))]
-    #     run_date = await get_run_date(schedule[5])
-    #     scheduler.add_job(send_message_to_users, 'date', run_date=run_date,
-    #                     #   end_date=(datetime.now()+timedelta(hours=23)),
-    #                       args=(lesson_id,))
-    #     asyncio.sleep(0.1)
 
 
 # async def set_scheduled_jobs(scheduler, *args, **kwargs):

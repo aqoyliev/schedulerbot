@@ -300,6 +300,10 @@ class Database:
         """
         return await self.execute(sql, fetch=True)
     
+    # async def select_time(self, id):
+    #     sql = f"SELECT id FROM times WHERE id='{id}';"
+    #     return await self.execute(sql, fetch=True)
+    
     async def select_science(self, lesson_id):
         sql = f"""SELECT sc.name 
         FROM schedules AS s 
