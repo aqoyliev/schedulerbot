@@ -60,6 +60,10 @@ class Database:
         sql = self.format_args(sql, parameters=kwargs)
         return await self.execute(sql, fetch=True)
     
+    async def select_id_by_phone(self, phone):
+        sql = f"SELECT chat_id FROM botusers WHERE phone='{phone}';"
+        return await self.execute(sql, fetchval=True)
+    
     async def select_user_ids(self):
         sql = "SELECT chat_id FROM botusers;"
         return await self.execute(sql, fetch=True)
@@ -75,6 +79,12 @@ class Database:
     async def count_users(self):
         sql = "SELECT COUNT(*) FROM botusers"
         return await self.execute(sql, fetchval=True)
+    
+    async def update_user_chat_id(self, old_chat_id, new_chat_id):
+        sql = f"""
+        UPDATE botusers SET chat_id='{new_chat_id}' WHERE chat_id={old_chat_id};
+        """
+        return await self.execute(sql, execute=True)
 
     async def update_language(self, chat_id, language):
         sql = f"""

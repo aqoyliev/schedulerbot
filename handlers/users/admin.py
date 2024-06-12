@@ -10,6 +10,7 @@ from keyboards.default.mainMenu import main_menu
 from loader import dp, db, bot
 from states.newpost import NewPost
 from utils.misc.echo import bot_echo
+from utils.scheduler import set_scheduler
 
 from googletrans import Translator
 trans = Translator()
@@ -30,6 +31,14 @@ async def get_admin_commands(message: Message):
     else:
         await bot_echo(message)
         
+@dp.message_handler(text="/restart")
+async def restart(message: Message):
+    admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
+    if message.from_user.id in admin_ids:
+        await set_scheduler()
+    else:
+        await bot_echo(message)
+
 @dp.message_handler(text="/allusers")
 async def get_all_users(message: Message):
     admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]

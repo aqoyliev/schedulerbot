@@ -13,6 +13,9 @@ async def register_button(language):
             [
                 KeyboardButton(text=trans.translate("🔐 Ro'yxatdan o'tish",dest=language).text),
             ],
+            [
+                KeyboardButton(text=trans.translate("🔑 Kirish",dest=language).text),
+            ]
         ],
         resize_keyboard=True,
     )

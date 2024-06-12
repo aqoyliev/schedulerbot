@@ -11,19 +11,18 @@ from keyboards.default.mainMenu import main_menu
 from keyboards.default.register import register_markup, phone_number_markup, back_markup
 from keyboards.default.admin import admin_menu
 from states.register import AdminRegister, Register, SignUp
+from handlers.users.login import login_handler
 
 from googletrans import Translator
 trans = Translator()
 
 
-@dp.message_handler(text = ['🔐 Register',"🔐 Ro'yxatdan o'tish",'🔐 Зарегистрироваться'],state=SignUp.register)
-async def show_settings(msg: Message):
+@dp.message_handler(text = ['🔐 Register',"🔐 Ro'yxatdan o'tish",'🔐 Зарегистрироваться','🔑 Login','🔑 Kirish','🔑 Войти'],state=SignUp.register)
+async def signup_handler(msg: Message):
     text = "Iltimos ismingizni va familiyangizni kiriting!\n"
-    # text += "Masalan: Aliyev Vali\n(Agar ism familiyangizda "
-    # text += "<code>'</code> mana shu tiniq belgisi bor bo'lsa "
-    # text += "uning o'rniga bu belgidan foydalaning <code>`</code>)"
-    admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
-    if msg.from_user.id not in admin_ids:
+    if msg.text in ['🔑 Login','🔑 Kirish','🔑 Войти']:
+        await login_handler(msg)
+    elif msg.from_user.id not in [record['chat_id'] for record in await db.select_admin_ids()]:
         lang = await db.select_language(msg.from_user.id)
         await msg.answer(trans.translate(text=text, dest=lang).text,reply_markup=ReplyKeyboardRemove(True))
         await Register.full_name.set()
@@ -215,8 +214,6 @@ async def set_group(msg: Message, state: FSMContext):
         await Register.education.set()
     else:
         try:
-            await msg.answer(trans.translate("Ma'lumotlaringiz muvaffaqiyatli saqlandi.\nBot haqida ko'proq bilmoqchi bo'lsangiz, /help buyrug'ini bosing.",dest=lang).text)
-            await msg.answer(trans.translate("Asosiy menu", dest=lang).text, reply_markup=await main_menu(lang))
             phone_number = await db.select_user_attribute(msg.from_user.id, 'phone')
             if not phone_number:
                 await db.update_user_full_name(chat_id=msg.from_user.id, fullname=full_name)
@@ -224,6 +221,8 @@ async def set_group(msg: Message, state: FSMContext):
             group_id = (await db.select_group_id(group, faculty_id, direction_id, course_id, education_id))[0]['id']
             await db.update_user_group_id(msg.from_user.id, group_id)
             await db.update_faculty_id(msg.from_user.id, faculty_id)
+            await msg.answer(trans.translate("Ma'lumotlaringiz muvaffaqiyatli saqlandi.\nBot haqida ko'proq bilmoqchi bo'lsangiz, /help buyrug'ini bosing.",dest=lang).text)
+            await msg.answer(trans.translate("Asosiy menu", dest=lang).text, reply_markup=await main_menu(lang))
             # adminga xabar berish
             admin_ids = [record['chat_id'] for record in await db.select_admin_ids()]
             for admin_id in admin_ids:

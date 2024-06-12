@@ -1,8 +1,7 @@
-from uuid import uuid4
-from loader import dp, db, bot
+from loader import db
 
-import asyncio
-from datetime import datetime
+# import asyncio
+# from datetime import datetime
 from googletrans import Translator
 trans = Translator()
 
