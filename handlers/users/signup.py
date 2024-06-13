@@ -37,7 +37,7 @@ async def full_name_handler(msg: Message, state: FSMContext):
     lang = await db.select_language(msg.from_user.id)
     full_name = msg.text.replace("'","''")
     try:
-        await state.update_data(full_name=msg.from_user.id)
+        await state.update_data(full_name=msg.text)
         phone_number = await db.select_user_attribute(msg.from_user.id, 'phone')
         if not phone_number:
             await msg.answer(trans.translate("Telefon raqamingizni jo'nating!\nNamuna: +998901234567",dest=lang).text, reply_markup=await back_markup(lang))

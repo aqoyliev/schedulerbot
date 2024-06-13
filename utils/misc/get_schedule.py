@@ -32,8 +32,7 @@ async def get_schedules(when='Today', group_id=None, day=None, language='en'):
             )
             k += 1
         schedule += "\n********************\n".join(lessons_list)
-        # return schedule if (len(schedule) < 150) else trans.translate("Jadval topilmadi😔",dest=language).text
-        return schedule
+        return schedule if (len(schedule) > 30) else trans.translate("Jadval topilmadi😔",dest=language).text
     except:
         return trans.translate("Jadval topilmadi😔\nBazadan ma'lumotlarni olishda muammo yuzaga keldi.",dest=language).text
 
@@ -59,8 +58,7 @@ async def get_full_schedules(group_id, day, language):
             )
             k += 1
         schedule += "\n********************\n".join(lessons_list)
-        # return schedule if (len(schedule) < 150) else None
-        return schedule
+        return schedule if (len(schedule) > 30) else None
     except:
         return trans.translate("Jadval topilmadi😔\nBazadan ma'lumotlarni olishda muammo yuzaga keldi.",dest=language).text
 
