@@ -153,5 +153,5 @@ async def cancel(message: Message, state: FSMContext):
         lang = await db.select_admin_lang(message.from_user.id)
         await message.answer(trans.translate("Asosiy menyu",dest=lang).text, reply_markup=await admin_menu(lang))
     else:
-        lang = await db.select_admin_lang(message.from_user.id)
+        lang = await db.select_language(message.from_user.id)
         await message.answer(trans.translate("Asosiy menyu",dest=lang).text, reply_markup=await main_menu(lang))
